@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>To-Do List Application</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .task-input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .task-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .task-item .task-checkbox {
+      margin-right: 10px;
+    }
+
+    .task-item .task-text {
+      flex-grow: 1;
+    }
+
+    .delete-button {
+      color: red;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>To-Do List</h1>
+    <form id="task-form">
+      <input type="text" id="task-input" class="task-input" placeholder="Add a new task..." required>
+      <button type="submit">Add Task</button>
+    </form>
+    <ul id="task-list" class="task-list"></ul>
+    <p id="task-count"></p>
+  </div>
+
+  <script>
+    // Get references to the HTML elements
+    const taskForm = document.getElementById('task-form');
+    const taskInput = document.getElementById('task-input');
+    const taskList = document.getElementById('task-list');
+    const taskCount = document.getElementById('task-count');
+
+    // Initialize tasks array
+    let tasks = [];
+
+    // Load tasks from local storage
+    if (localStorage.getItem('tasks')) {
+      tasks = JSON.parse(localStorage.getItem('tasks'));
+      renderTasks();
+    }
+
+    // Function to render tasks
+    function renderTasks() {
+      taskList.innerHTML = '';
+      for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
+        const taskItem = document.createElement('li');
+        taskItem.className = 'task-item';
+        taskItem.innerHTML = `
+          <input type="checkbox" class="task-checkbox" data-index="${i}" ${task.completed ? 'checked' : ''}>
+          <span class="task-text">${task.text}</span>
+          <span class="delete-button" data-index="${i}">X</span>
+        `;
+        taskList.appendChild(taskItem);
+      }
+      updateTaskCount();
+    }
+
+    // Function to update task count
+    function updateTaskCount() {
+      const remainingTasks = tasks.filter(task => !task.completed).length;
+      taskCount.textContent = `${remainingTasks} task${remainingTasks !== 1 ? 's' : ''} remaining`;
+    }
+
+    // Event listener for submitting the task form
+    taskForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const taskText = taskInput.value.trim();
+      if (taskText !== '') {
+        const newTask = {
+          text: taskText,
+          completed: false
+        };
+        tasks.push(newTask);
+        renderTasks();
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        taskInput.value = '';
+      }
+    });
+
+    // Event listener for checking/unchecking a task
+    taskList.addEventListener('change', function(event) {
+      if (event.target.matches('.task-checkbox')) {
+        const index = event.target.dataset.index;
+        tasks[index].completed = event.target.checked;
+        renderTasks();
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+      }
+    });
+
+    // Event listener for deleting a task
+    taskList.addEventListener('click', function(event) {
+      if (event.target.matches('.delete-button')) {
+        const index = event.target.dataset.index;
+        tasks.splice(index, 1);
+        renderTasks();
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+      }
+    });
+  </script>
+</body>
+</html>
